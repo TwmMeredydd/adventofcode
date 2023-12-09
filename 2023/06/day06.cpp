@@ -6,8 +6,8 @@
 using namespace std;
 
 struct Race {
-    int time;
-    int distance;
+    long long time;
+    long long distance;
 };
 
 vector<string> input;
@@ -31,14 +31,27 @@ void parseInput() {
     }
 }
 
-int partOne() {
-    int result = 1;
+long long partOne() {
+    long long result = 1;
     for (Race race : races) {
-        float descriminant = sqrt(pow(race.time, 2) - 4*race.distance);
+        double descriminant = sqrt(pow(race.time, 2) - 4*race.distance);
         result *= ceil((race.time+descriminant)/2) - floor((race.time-descriminant)/2) - 1;
     }
 
     return result;
+}
+
+long long partTwo() {
+    long long time = 0;
+    long long distance = 0;
+
+    for (Race race : races) {
+        time = time * pow(10, int(log10(race.time))+1) + race.time;
+        distance = distance * pow(10, int(log10(race.distance))+1) + race.distance;
+    }
+
+    races = {{time, distance}};
+    return partOne();
 }
 
 int main() {
@@ -51,6 +64,8 @@ int main() {
         parseInput();
 
         cout << "Part 1: " << partOne() << endl;
+
+        cout << "Part 2: " << partTwo() << endl;
     } else {
         cout << "Unable to read input" << endl;
     }
