@@ -34,6 +34,18 @@ class Point {
             return Point(row, col-1);
         }
 
+        char getType() {
+            return type;
+        }
+
+        int getRow() {
+            return row;
+        }
+
+        int getCol() {
+            return col;
+        }
+
         vector<Point> getConnections() {
             switch (type) {
                 case '|': return {north(), south()};
@@ -60,10 +72,11 @@ class Point {
         char type;
 };
 
+vector<Point> loop;
+
 int partOne(Point start) {
     Point cursor = start;
     Point previous_point = start;
-    int steps = 1; //Account for step we're about to take here.
     for (Point point : start.getConnections()) {
         vector<Point> connections = point.getConnections();
         if (count(connections.begin(), connections.end(), start)) {
@@ -75,7 +88,7 @@ int partOne(Point start) {
     while (cursor != start) {
         for (Point point : cursor.getConnections()) {
             if (point != previous_point) {
-                steps++;
+                loop.push_back(cursor);
                 previous_point = cursor;
                 cursor = point;
                 break;
@@ -83,11 +96,24 @@ int partOne(Point start) {
         }
     }
 
-    return steps/2;
+    return loop.size()/2;
+}   
+
+float partTwo() {
+    float area = 0;
+
+    for (int i=0; i<loop.size(); i++) {
+        Point current = loop[i];
+        Point next = loop[(i+1)%loop.size()];
+        area += current.getCol() * next.getRow() - next.getCol() * current.getRow();
+    }
+
+    return area/2 - loop.size()/2 + 1;
 }
 
 int main() {
     //ifstream file("./input.example.txt");
+    //ifstream file("./input.example2.txt");
     ifstream file("../../inputs/2023/10.txt");
     
     if (file.is_open()) {
@@ -107,8 +133,10 @@ int main() {
             row++;
         }
         Point start = Point(start_point_raw[0], start_point_raw[1]);
+        loop.push_back(start);
 
         cout << "Part 1: " << partOne(start) << endl;
+        cout << "Part 2: " << partTwo() << endl;
 
         file.close();
     } else {
