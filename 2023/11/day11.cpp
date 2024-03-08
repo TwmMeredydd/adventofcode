@@ -7,14 +7,17 @@
 using namespace std;
 
 struct Galaxy {
-    int x, y;
+    long x, y;
 };
 
-vector<Galaxy> galaxies;
+vector<Galaxy> rawGalaxies;
 set<int> empty_rows;
 set<int> empty_cols;
 
 int partOne() {
+    vector<Galaxy> galaxies;
+    copy(rawGalaxies.begin(), rawGalaxies.end(), back_inserter(galaxies));
+
     int total_steps = 0;
 
     for (int i=0; i<galaxies.size(); i++) {
@@ -40,6 +43,35 @@ int partOne() {
     return total_steps;
 }
 
+long partTwo() {
+    vector<Galaxy> galaxies;
+    copy(rawGalaxies.begin(), rawGalaxies.end(), back_inserter(galaxies));
+
+    long total_steps = 0;
+
+    for (int i=0; i<galaxies.size(); i++) {
+        Galaxy* galaxy = &galaxies[i];
+        
+        int xOffset = 0;
+        for (int col : empty_cols) if (galaxy->x > col) xOffset++;
+        galaxy->x += xOffset*999999;
+        
+        int yOffset = 0;
+        for (int row : empty_rows) if (galaxy->y > row) yOffset++;
+        galaxy->y += yOffset*999999;
+    }
+
+    for (int i=0; i<galaxies.size(); i++) {
+        Galaxy galaxy = galaxies[i];
+        for (int j=i+1; j<galaxies.size(); j++) {
+            Galaxy galaxy2 = galaxies[j];
+            total_steps += abs(galaxy2.x - galaxy.x) + abs(galaxy2.y - galaxy.y);
+        }
+    }
+
+    return total_steps;
+}
+
 int main() {
     //ifstream file("./input.example.txt");
     ifstream file("../../inputs/2023/11.txt");
@@ -52,7 +84,7 @@ int main() {
             set<int> dots;
             for (int col=0; col<line.length(); col++)
                 if (line[col] == '#') {
-                    galaxies.push_back({col, row});
+                    rawGalaxies.push_back({col, row});
                     empty = false;
                 } else {
                     dots.insert(col);
@@ -72,6 +104,7 @@ int main() {
         }
 
         cout << "Part 1: " << partOne() << endl;
+        cout << "Part 2: " << partTwo() << endl;
 
     } else {
         cout << "Unable to read input" << endl;
