@@ -1,61 +1,82 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <unordered_map>
+#include <list>
 
 using namespace std;
 
-vector<string> format1;
-vector<vector<int>> format2;
-
 struct Line {
     string diagram;
-    vector<int> numbers;
+    list<int> numbers;
 };
 
 vector<Line> lines;
 
-vector<int> countDamaged(string blocks) {
-    vector<int> blockLengths;
-    int length = 0;
+list<int> countDamaged(string blocks) {
+    list<int> blockLengths = {0};
     for (char c : blocks) {
-        if (c == '#') length++;
-        else if (length > 0) {
-            blockLengths.push_back(length);
-            length = 0;
-        }
+        if (c == '#') blockLengths.back()++;
+        else if (blockLengths.back()) blockLengths.push_back(0);
     }
     return blockLengths;
 }
 
-int dfs (string blocks, int i, vector<int> criteria) {
-    int solutions = 0;
+string getKey(string blocks, int damagedStreak, list<int> criteria) {
+    string key = blocks + '_' + to_string(damagedStreak) + "_";
+    for (int i : criteria) key += to_string(i) + ',';
+    return key;
+}
 
-    bool valid = true;
-    vector<int> currentBlocks = countDamaged(blocks.substr(0,i));
-    //Putting the size calculation inside the loop condition doesn't work for some reason.
-    int currentBlocksLength = currentBlocks.size()-1;
-    for (int i=0; i<currentBlocksLength; i++) {
-        if (currentBlocks[i] != criteria[i]) valid = false;
-    }
-    if (!valid) return 0;
+long dfs (string blocks, int damagedStreak, list<int> criteria, unordered_map<string, long> &cache) {
+    const string key = getKey(blocks, damagedStreak, criteria);
+    if (cache.find(key) != cache.end()) return cache[key];
+    if (damagedStreak > criteria.front()) return 0;
+    if (blocks.empty()) return criteria.empty();
 
-    if (i < blocks.length()) {
-        if (blocks[i] == '?') {
-            for (char c : {'.', '#'}) {
-                solutions += dfs(blocks.substr(0,i) + c + blocks.substr(i+1), i+1, criteria);
+    long solutions = 0;
+    list<int> remainingCriteria;
+
+    switch (blocks[0]) {
+        case '?':
+            for (char c : {'.', '#'}) solutions += dfs(c + blocks.substr(1), damagedStreak, criteria, cache);
+            break;
+        case '.':
+            copy(criteria.begin(), criteria.end(), back_inserter(remainingCriteria));
+            if (!criteria.empty()) {
+                if (damagedStreak < criteria.front() && damagedStreak > 0) return 0;
+                if (damagedStreak == criteria.front()) remainingCriteria.pop_front();
             }
-            return solutions;
-        }
-        return dfs(blocks, i+1, criteria);
+            solutions += dfs(blocks.substr(1), 0, remainingCriteria, cache);
+            break;
+        case '#':
+            if (criteria.empty()) return 0;
+            solutions += dfs(blocks.substr(1), damagedStreak+1, criteria, cache);
+            break;
     }
-    if (countDamaged(blocks) == criteria) return 1;
-    return 0;
+
+    cache[getKey(blocks, damagedStreak, criteria)] = solutions;
+    return solutions;
 }
 
 int partOne() {
     int solutions = 0;
     for (Line line : lines) {
-        solutions += dfs(line.diagram, 0, line.numbers);
+        unordered_map<string, long> cache;
+        solutions += dfs(line.diagram + '.', 0, line.numbers, cache);
+    }
+    return solutions;
+}
+
+long partTwo() {
+    long solutions = 0;
+    for (Line line : lines) {
+        unordered_map<string, long> cache;
+        list<int> numbers;
+        string diagram = line.diagram;
+        for (int i=0; i<5; i++) copy(line.numbers.begin(), line.numbers.end(), back_inserter(numbers));
+        for (int i=0; i<4; i++) diagram += '?' + line.diagram;
+        solutions += dfs(diagram + '.', 0, numbers, cache);
     }
     return solutions;
 }
@@ -74,7 +95,7 @@ int main() {
                 numberStr = line.substr(i+1, line.length()-i+1) + ',';
                 break;
             }
-            vector<int> numVec;
+            list<int> numVec;
             int num = 0;
             for (char c : numberStr) {
                 if (c == ',') {
@@ -83,10 +104,11 @@ int main() {
                 } else 
                     num = num * 10 + int(c) - 48;
             }
-            lines.push_back({diagram + '.', numVec});
+            lines.push_back({diagram, numVec});
         }
 
         cout << partOne() << endl;
+        cout << partTwo() << endl;
     } else {
         cout << "Unable to read inputs." << endl;
     }
