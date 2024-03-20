@@ -11,7 +11,7 @@ struct Line {
     list<int> numbers;
 };
 
-vector<Line> lines;
+vector<Line> rows;
 
 list<int> countDamaged(string blocks) {
     list<int> blockLengths = {0};
@@ -61,7 +61,7 @@ long dfs (string blocks, int damagedStreak, list<int> criteria, unordered_map<st
 
 int partOne() {
     int solutions = 0;
-    for (Line line : lines) {
+    for (Line line : rows) {
         unordered_map<string, long> cache;
         solutions += dfs(line.diagram + '.', 0, line.numbers, cache);
     }
@@ -70,7 +70,7 @@ int partOne() {
 
 long partTwo() {
     long solutions = 0;
-    for (Line line : lines) {
+    for (Line line : rows) {
         unordered_map<string, long> cache;
         list<int> numbers;
         string diagram = line.diagram;
@@ -104,7 +104,7 @@ int main() {
                 } else 
                     num = num * 10 + int(c) - 48;
             }
-            lines.push_back({diagram, numVec});
+            rows.push_back({diagram, numVec});
         }
 
         cout << partOne() << endl;
